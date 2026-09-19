@@ -1,0 +1,848 @@
+<!-- views/panel.html -->
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Waitgate - Panel</title>
+    <link rel="shortcut icon" href="https://camo.githubusercontent.com/e856590000d9caed8575a3aec619545e64a56177baaa1d5149c1e52573c1df03/68747470733a2f2f7374617469632e77696b69612e6e6f636f6f6b69652e6e65742f6e69636f732d6e657874626f74732d66616e6d6164652f696d616765732f342f34332f526576657273655f637562652e6769662f7265766973696f6e2f6c61746573742f7363616c652d746f2d77696474682f3336303f63623d3230323430363136303133353232">
+    <link href="https://fonts.googleapis.com/css?family=Inter:400,700&display=swap" rel="stylesheet">
+    <script>window._loginKey = '{{LOGIN_SECRET}}'</script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            color: #e4e6ef;
+            background: #101025;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .background {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .grid3d {
+            position: absolute;
+            width: 240%;
+            height: 240%;
+            top: -70%;
+            left: -70%;
+            background-image:
+                linear-gradient(0deg, #8a5cff22 1px, transparent 1px),
+                linear-gradient(90deg, #8a5cff22 1px, transparent 1px);
+            background-size: 44px 44px;
+            transform: rotateX(70deg) rotateZ(17deg) scale(1.1);
+            transform-origin: center;
+            animation: grid-move 65s linear infinite;
+            opacity: 0.055;
+            pointer-events: none;
+        }
+
+        @keyframes grid-move {
+            0% {
+                transform: rotateX(70deg) rotateZ(17deg) scale(1.1) translate(0, 0);
+            }
+
+            100% {
+                transform: rotateX(70deg) rotateZ(17deg) scale(1.1) translate(-220px, -200px);
+            }
+        }
+
+        #stars-canvas {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            display: block;
+        }
+
+        .floating-glow {
+            position: absolute;
+            inset: 0;
+            margin: auto;
+            pointer-events: none;
+            z-index: 2;
+            filter: blur(38px);
+            opacity: 0.24;
+            border-radius: 2.1rem;
+            width: 273px;
+            height: 447px;
+            background: radial-gradient(ellipse at 60% 30%, #9d81fa 55%, transparent 95%);
+            animation: glow-pulse 5.2s ease-in-out infinite alternate;
+            transition: opacity .3s;
+        }
+
+        @media (max-width: 600px) {
+            .floating-glow {
+                width: 90vw;
+                height: 120px;
+            }
+        }
+
+        @keyframes glow-pulse {
+            from {
+                opacity: .18;
+                filter: blur(32px);
+            }
+
+            to {
+                opacity: .34;
+                filter: blur(56px);
+            }
+        }
+
+        .panel {
+            position: relative;
+            z-index: 3;
+            max-width: 460px;
+            min-width: 295px;
+            background: rgba(35, 36, 58, 0.88);
+            border-radius: 1.4rem;
+            padding: 2.6rem 2.2rem;
+            text-align: center;
+            animation: fadeIn 0.8s ease-out, floaty 3.0s ease-in-out infinite alternate;
+            backdrop-filter: blur(3.5px);
+            opacity: 85%;
+        }
+
+        @media (max-width: 480px) {
+            .panel {
+                padding: 1.5rem 0.7rem;
+                min-width: unset;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 0.85;
+            }
+        }
+
+        @keyframes floaty {
+            0% {
+                transform: translateY(0px);
+            }
+
+            100% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 2.2rem;
+            letter-spacing: .08em;
+            color: #8a5cff;
+            margin-bottom: 1.6rem;
+            text-shadow: 0 2px 14px #0003;
+            text-align: center;
+        }
+
+        .section {
+            margin-bottom: 1.5rem;
+        }
+
+        .stat {
+            font-size: 1.08rem;
+            line-height: 1.7;
+        }
+
+        .chip {
+            display: inline-block;
+            background: #242651;
+            color: #e4e6ef;
+            border-radius: 999px;
+            padding: 0.001em 0.5em;
+            margin: 0 .25em;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: .01em;
+            box-shadow: 0 1px 6px #0002;
+        }
+
+        .chip.status-up {
+            background: #2ba674 !important;
+            color: #eafbe3;
+        }
+
+        .chip.status-down {
+            background: #d23e50 !important;
+            color: #fff4f4;
+        }
+
+        .chip.ip {
+            background: #22233e;
+            color: #98e9fa;
+        }
+
+        .users {
+            margin: .5em 0 0 .2em;
+            display: flex;
+            flex-wrap: wrap;
+            gap: .4em;
+        }
+
+        .admin-btn.neutral {
+            background: rgba(71, 74, 113, 0.93);
+            color: #c3c7e6;
+            font-weight: 600;
+            border: none;
+            border-radius: 1.15em;
+            padding: 0.93em 0;
+            width: 100%;
+            font-size: 1.07rem;
+            box-shadow: 0 1px 10px #2e355a18;
+            margin-bottom: 1em;
+            cursor: pointer;
+            text-align: center;
+            transition:
+                background 0.17s,
+                color 0.14s,
+                filter 0.14s,
+                transform 0.12s,
+                box-shadow 0.15s;
+        }
+        .admin-btn.neutral:hover,
+        .admin-btn.neutral:focus-visible {
+            background: rgba(56, 58, 94, 0.93);
+            color: #fff;
+            filter: brightness(1.03);
+            transform: translateY(-1px) scale(1.009);
+            box-shadow: 0 4px 18px #36387233;
+        }
+
+        .download {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background: linear-gradient(90deg, #57b1d6 0%, #405cab 100%);
+            color: #e9f6fb;
+            border: none;
+            border-radius: 1.2em;
+            padding: .93em 0;
+            font-size: 1.07rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 1px 10px #405cab32;
+            text-decoration: none;
+            margin-bottom: 1em;
+            transition:
+                background 0.21s cubic-bezier(.68,-0.55,.27,1.55),
+                color 0.19s,
+                filter 0.17s,
+                transform 0.15s,
+                box-shadow 0.19s;
+        }
+        .download:hover,
+        .download:focus-visible {
+            background: linear-gradient(90deg, #63c5ea 10%, #5471d3 90%);
+            color: #fff;
+            filter: brightness(1.05);
+            transform: translateY(-1px) scale(1.011);
+            box-shadow: 0 5px 22px #5471d355;
+        }
+
+        .admin-btn {
+            margin-bottom: 1em;
+            background: #2ba674;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .admin-btn.red {
+            background: #3b2335;
+            color: #d783a0;
+            font-weight: 600;
+            transition:
+                background 0.16s,
+                color 0.18s,
+                box-shadow 0.20s,
+                transform 0.15s;
+        }
+        .admin-btn.red:hover,
+        .admin-btn.red:focus-visible {
+            background: #68263c;
+            color: #fff1f7;
+            transform: translateY(-1.2px) scale(1.007);
+            box-shadow: 0 3px 12px #d23e5018;
+        }
+
+        @keyframes btn-pulse-subtle {
+            0%,100% { box-shadow: 0 2px 10px #283d6322; }
+            50% { box-shadow: 0 4px 18px #4265a644; }
+        }
+
+        .admin-btn.otp {
+            background: linear-gradient(90deg, #ad8fff 0%, #6d5cc3 100%);
+            color: #fff;
+            font-weight: bold !important;
+            border: none;
+            border-radius: 1.2em;
+            padding: .93em 0;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 1px 10px #ad8fff22;
+            margin-bottom: 1em;
+            transition:
+                background 0.22s,
+                color 0.17s,
+                filter 0.15s,
+                transform 0.14s,
+                box-shadow 0.20s;
+        }
+        .admin-btn.otp:hover,
+        .admin-btn.otp:focus-visible {
+            background: linear-gradient(90deg, #ccbaff 10%, #7b6de7 90%);
+            color: #fff;
+            filter: brightness(1.03);
+            transform: translateY(-1px) scale(1.012);
+            box-shadow: 0 5px 22px #ad8fff55;
+        }
+
+        .logout {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background: linear-gradient(90deg, #bb3850 0%, #5c253a 100%);
+            color: #fff8fa;
+            border: none;
+            border-radius: 1.2em;
+            padding: .93em 0;
+            font-size: 1.07rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 1px 10px #bb385033;
+            margin-bottom: 1em;
+            transition:
+                background 0.21s cubic-bezier(.68,-0.55,.27,1.55),
+                color 0.17s,
+                filter 0.14s,
+                transform 0.13s,
+                box-shadow 0.20s;
+        }
+        .logout:hover,
+        .logout:focus-visible {
+            background: linear-gradient(90deg, #d64562 10%, #8a3457 90%);
+            color: #fff;
+            filter: brightness(1.05);
+            transform: translateY(-1px) scale(1.013);
+            box-shadow: 0 5px 22px #d6456270;
+        }
+
+        .footer {
+            font-size: .95rem;
+            opacity: .36;
+            text-align: center;
+            margin-top: 1.6em;
+            color: #e4e6ef;
+        }
+
+        .modal-backdrop {
+            position: fixed; inset: 0; background: #101025d0; z-index: 1001;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background: #242651;
+            color: #e4e6ef;
+            border-radius: 1.2rem;
+            padding: 2rem 1.5rem 1.5rem 1.5rem;
+            max-width: 340px;
+            width: 100%;
+            box-shadow: 0 8px 32px #000a;
+            position: relative;
+            animation: fadeIn .22s;
+        }
+        .modal-close {
+            position: absolute; top: 1rem; right: 1rem;
+            background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;
+            opacity: 0.8;
+        }
+        .modal-close:hover { opacity: 1; }
+        .modal-title {
+            font-size: 1.2rem; font-weight: bold; margin-bottom: .8em;
+        }
+        .modal-desc { margin-bottom: 1.4em; }
+        .modal-secret {
+            color: #ffd564; font-size: 1.08em; margin-top: 0.5em; letter-spacing: .05em;
+        }
+        .modal-btns { margin-top: 2em; text-align: center;}
+
+        @media (max-width: 600px) {
+            html, body {
+                min-height: 100vh;
+                width: 100vw;
+                font-size: 1.07em;
+            }
+            .panel {
+                min-width: unset;
+                max-width: 100vw;
+                width: 100vw;
+                padding: 2.0rem 0.7rem 1.2rem 0.7rem;
+                border-radius: 0.8rem;
+                font-size: 1.11rem;
+                box-sizing: border-box;
+            }
+            .logo {
+                font-size: 2.0rem;
+                margin-bottom: 1.2rem;
+            }
+            .section.stat, .section {
+                font-size: 1.12rem;
+            }
+            .users {
+                gap: 0.18em;
+                font-size: 1.08rem;
+            }
+            .download, .admin-btn, .logout {
+                font-size: 1.12rem;
+                padding: 1.13em 0;
+            }
+            .footer {
+                font-size: 0.96rem;
+                margin-top: 1em;
+            }
+            .modal-content {
+                padding: 1.1rem 0.5rem 0.9rem 0.5rem;
+                max-width: 96vw;
+                border-radius: 0.65em;
+                font-size: 1.09rem;
+            }
+            .chip {
+                font-size: 1.09rem;
+                padding: 0.15em 0.75em;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background">
+        <div class="grid3d"></div>
+        <canvas id="stars-canvas"></canvas>
+        <div class="floating-glow"></div>
+    </div>
+    <div class="panel">
+        <div class="logo">Waitgate</div>
+        <div class="section stat">
+            2FA :
+            <span id="tfa-state-indicator" style="margin-bottom:1.2em;"></span><br>
+            Tunnel :
+            <span class="chip status-{{TUNNEL_STATUS_CLASS}}" id="status-chip">{{TUNNEL_STATUS}}</span><br>
+            exposed IP :
+            <span class="chip ip" id="ip-chip">{{EXPOSER_IP}}</span><br>
+        </div>
+        <div class="section">
+            Users online :
+            <div class="users" id="users-list">
+                {{USER_IPS}}
+            </div>
+        </div>
+        <button class="download" id="download-btn">Download client.js</button>
+        <button class="admin-btn otp" id="btn-tfa-action" style="margin-bottom:1.6em">...</span></button>
+        <button class="logout" id="logout-btn">Logout</button>
+        <div class="footer">Waitgate © 2025 • Prototype</div>
+    </div>
+
+    <div id="modal-tfa" style="display:none"></div>
+    <script type="module">
+        import { ChaCha20Poly1305 } from "https://cdn.skypack.dev/@stablelib/chacha20poly1305@2.0.1";
+
+        function base64ToUint8(str) {
+            str = str.replace(/-/g, '+').replace(/_/g, '/');
+            while (str.length % 4) str += '=';
+            return new Uint8Array(atob(str).split('').map(c => c.charCodeAt(0)));
+        }
+
+        // encrypt TFA
+        function encryptTfaPayload(obj) {
+            const key = base64ToUint8(window._loginKey);
+            const nonce = window.crypto.getRandomValues(new Uint8Array(12));
+            const plain = new TextEncoder().encode(JSON.stringify(obj));
+            const chacha = new ChaCha20Poly1305(key);
+            const ct = chacha.seal(nonce, plain);
+            // Concatène nonce + ct (Uint8Array)
+            const out = new Uint8Array(nonce.length + ct.length);
+            out.set(nonce, 0);
+            out.set(ct, nonce.length);
+            return out;
+        }
+
+        // decrypt TFA
+        async function fetchTfaApi(url, opts = {}) {
+            const res = await fetch(url, opts);
+            if (!res.ok) throw new Error("HTTP error");
+            const buf = new Uint8Array(await res.arrayBuffer());
+            const key = base64ToUint8(window._loginKey);
+            const nonce = buf.slice(0, 12);
+            const ctAndTag = buf.slice(12);
+            const chacha = new ChaCha20Poly1305(key);
+            const plain = chacha.open(nonce, ctAndTag);
+            if (!plain) throw new Error("Decryption error");
+            return JSON.parse(new TextDecoder().decode(plain));
+        }
+
+        window.downloadAndDecryptClient = async function() {
+            const res = await fetch("/download", { credentials: "include" });
+            if (!res.ok) return alert("Error downloading");
+            if (key.length !== 32) return alert("Session key missing");
+            const encrypted = new Uint8Array(await res.arrayBuffer());
+            const key = base64ToUint8(window._loginKey);
+            const nonce = encrypted.slice(0, 12);
+            const ct = encrypted.slice(12);
+            const chacha = new ChaCha20Poly1305(key);
+            const decrypted = chacha.open(nonce, ct);
+            if (!decrypted) return alert("Decryption error (invalid key or data)");
+            // Download du JS déchiffré
+            const blob = new Blob([decrypted], { type: "application/javascript" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "client.js";
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                URL.revokeObjectURL(url);
+                a.remove();
+            }, 2000);
+        }
+        document.getElementById("download-btn").addEventListener("click", async () => {
+            const key = window._loginKey;
+            if (!key) return alert("Missing key.");
+            const res = await fetch('/download', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key })
+            });
+            if (!res.ok) return alert("Error downloading.");
+            const encrypted = new Uint8Array(await res.arrayBuffer());
+            const keyUint8 = base64ToUint8(key);
+            const nonce = encrypted.slice(0, 12);
+            const ct = encrypted.slice(12);
+            const chacha = new ChaCha20Poly1305(keyUint8);
+            const decrypted = chacha.open(nonce, ct);
+            if (!decrypted) return alert("Decryption error (invalid key or data)");
+            const blob = new Blob([decrypted], { type: "application/javascript" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "client.js";
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                URL.revokeObjectURL(url);
+                a.remove();
+            }, 2000);
+        });
+
+        // Modal util
+        function showModal(html) {
+            const modal = document.getElementById('modal-tfa');
+            modal.innerHTML = `
+                <div class="modal-backdrop">
+                    <div class="modal-content">
+                        <button class="modal-close" onclick="hideModal()">&times;</button>
+                        ${html}
+                    </div>
+                </div>`;
+            modal.style.display = "block";
+        }
+        function hideModal() {
+            document.getElementById('modal-tfa').style.display = "none";
+        }
+        window.hideModal = hideModal;
+        // 2FA state display & action
+        let TFA_ENABLED = false;
+
+        function updateTfaUi(enabled) {
+            TFA_ENABLED = enabled;
+            document.getElementById('tfa-state-indicator').innerHTML = enabled
+                ? "<span class='chip status-up'>ENABLED 😊</span>"
+                : "<span class='chip status-down'>DISABLED 😡</span>";
+            document.getElementById('btn-tfa-action').innerHTML = enabled
+                ? "Disable 2FA"
+                : "Enable 2FA";
+        }
+        function refreshTfa() {
+            fetch('/api/tfa-setup')
+                .then(r => r.json())
+                .then(d => updateTfaUi(!!d.enabled))
+                .catch(_ => updateTfaUi(false));
+        }
+        refreshTfa();
+
+        document.getElementById('btn-tfa-action').onclick = function() {
+            if (!TFA_ENABLED) {
+                // Activer la 2FA → POST
+                showModal(`<div class="modal-title">Enable 2FA</div>
+                    <div class="modal-desc">Enable two-factor authentication to secure access to your account.<br><b>Continue ?</b></b></div>
+                    <div class="modal-btns">
+                        <button class="admin-btn otp" onclick="enableTfa()">Enable</button>
+                        <button class="admin-btn neutral" onclick="hideModal()">Cancel</button>
+                    </div>`);
+            } else {
+                // Désactiver la 2FA → POST
+                showModal(`<div class="modal-title">Disable 2FA</div>
+                    <div class="modal-desc">Disabling two-factor authentication makes access less secure..<br><b>Continue ?</b></div>
+                    <div class="modal-btns">
+                        <button class="admin-btn otp" onclick="disableTfa()">Disable</button>
+                        <button class="admin-btn neutral" onclick="hideModal()">Cancel</button>
+                    </div>`);
+            }
+        };
+
+        window.enableTfa = function() {
+            let tempTfaSecret = null;
+            let tempQrUri = null;
+
+            fetch('/api/tfa-setup', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "enable" })
+            })
+            .then(async res => {
+                if (!res.ok) throw new Error("HTTP error");
+                // attend un ArrayBuffer (binaire)
+                const buf = new Uint8Array(await res.arrayBuffer());
+                // Décryptage ChaCha20Poly1305
+                const key = base64ToUint8(window._loginKey);
+                const nonce = buf.slice(0, 12);
+                const ctAndTag = buf.slice(12);
+                const chacha = new ChaCha20Poly1305(key);
+                const plain = chacha.open(nonce, ctAndTag);
+                if (!plain) throw new Error("Decryption error");
+                const j = JSON.parse(new TextDecoder().decode(plain));
+                if (j.ok) {
+                    tempTfaSecret = j.secret;
+                    tempQrUri = j.uri;
+                    const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + encodeURIComponent(j.uri);
+                    showModal(`
+                        <div class="modal-title">2FA configuration</div>
+                        <div style="text-align:center">
+                            <img src="${qrUrl}" width="180" height="180" alt="QR 2FA" style="background:#fff;padding:8px;border-radius:12px;margin-bottom:1em;"><br>
+                            <span style="font-size:.97em;">Scan this QR code with Google Authenticator or equivalent.</span>
+                            <div class="modal-secret" style="margin-bottom:1.5em;">Secret code : <b>${j.secret}</b></div>
+                            <div>
+                                <input type="text" id="tfa-check-code" maxlength="6" placeholder="Code..." style="width:130px;padding:8px;border-radius:9px;border:none;font-size:1.1em;text-align:center;letter-spacing:0.15em;" autocomplete="one-time-code" autofocus>
+                            </div>
+                            <div id="tfa-check-result" style="margin-top:.8em;min-height:1.8em;font-size:1.05em;"></div>
+                            <div class="modal-btns" style="margin-top:2em;">
+                                <button class="admin-btn otp" id="btn-activate-tfa">Activate</button>
+                                <button class="admin-btn neutral" onclick="hideModal();refreshTfa()">Cancel</button>
+                            </div>
+                        </div>
+                    `);
+                    document.getElementById('btn-activate-tfa').onclick = function() {
+                        const code = document.getElementById('tfa-check-code').value.trim();
+                        const resDiv = document.getElementById('tfa-check-result');
+                        if (!/^[0-9]{6}$/.test(code)) {
+                            resDiv.innerHTML = "<span style='color:#d23e50;'>Enter a 6-digit code.</span>";
+                            return;
+                        }
+                        const payload = encryptTfaPayload({ action: "enable", secret: tempTfaSecret, code });
+                        fetch('/api/tfa-setup', {
+                            method: "POST",
+                            headers: { "Content-Type": "application/octet-stream" },
+                            body: payload.buffer
+                        })
+                        .then(res => res.json())
+                        .then(j => {
+                            if (j.ok) {
+                                hideModal();
+                                refreshTfa();
+                                refreshStatus();
+                            } else {
+                                resDiv.innerHTML = "<span style='color:#d23e50;'>❌ Invalid code.</span>";
+                            }
+                        })
+                        .catch(() => {
+                            resDiv.innerHTML = "<span style='color:#d23e50;'>Connection error.</span>";
+                        });
+                    };
+                }
+            })
+            .catch(() => {
+                showModal(`<div class="modal-title">Error</div><div>Cannot enable 2FA.</div>
+                    <div class="modal-btns"><button class="admin-btn neutral" onclick="hideModal()">OK</button></div>`);
+            });
+        };
+        window.disableTfa = function() {
+            fetch('/api/tfa-setup', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "disable" })
+            })
+            .then(res => res.json())
+            .then(j => {
+                if (j.ok) {
+                    hideModal();
+                    refreshTfa();
+                    refreshStatus();
+                } else {
+                    showModal(`<div class="modal-title">Error</div><div>Cannot disable 2FA.</div>
+                        <div class="modal-btns"><button class="admin-btn otp" onclick="hideModal()">OK</button></div>`);
+                }
+            })
+            .catch(() => {
+                showModal(`<div class="modal-title">Error</div><div>Cannot disable 2FA.</div>
+                    <div class="modal-btns"><button class="admin-btn otp" onclick="hideModal()">OK</button></div>`);
+            });
+        };
+
+        // Déconnexion
+        document.getElementById('logout-btn').onclick = e => {
+            e.preventDefault();
+            fetch('/api/logout', { method: 'POST' })
+                .then(() => window.location = '/dashboard');
+        };
+
+        // Rafraîchissement status live
+        function refreshStatus() {
+            fetch('/api/status')
+                .then(r => r.json())
+                .then(s => {
+                    // Statut du tunnel
+                    let chip = document.getElementById('status-chip');
+                    chip.innerText = s.tunnel ? 'ONLINE' : 'OFFLINE';
+                    chip.className = 'chip ' + (s.tunnel ? 'status-up' : 'status-down');
+                    // IP exposée par le tunnel
+                    document.getElementById('ip-chip').innerText = s.exposerIp || '-';
+                    // Liste des utilisateurs connectés
+                    let usersDiv = document.getElementById('users-list');
+                    usersDiv.innerHTML = (s.userIps.length === 0)
+                        ? '<i style="opacity:.7;">Nobody</i>'
+                        : s.userIps.map(ip => `<span class="chip ip">${ip}</span>`).join(' ');
+                });
+        }
+        setInterval(refreshStatus, 5000);
+        refreshStatus();
+
+        // Etoiles & étoiles filantes
+        const canvas = document.getElementById('stars-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let stars = [];
+        let shootingStars = [];
+        let starDensity = 120; // Nb d'étoiles
+
+        function updateCanvasSize() {
+            // Prend l'espace visible
+            let w = window.innerWidth, h = window.innerHeight;
+            // Ajuste pour éviter la barre URL qui cache le bas
+            if (/Mobi|Android/i.test(navigator.userAgent)) {
+                h = Math.max(h, document.documentElement.clientHeight, document.body.clientHeight);
+            }
+            // Haute densité
+            const ratio = Math.max(window.devicePixelRatio, 1);
+            canvas.width = Math.round(w * ratio);
+            canvas.height = Math.round(h * ratio);
+            canvas.style.width = w + "px";
+            canvas.style.height = h + "px";
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        }
+
+        function createStars() {
+            // Adapte à la taille de l'écran
+            const w = canvas.width / Math.max(window.devicePixelRatio, 1);
+            stars = [];
+            for (let i = 0; i < Math.round(w / 1000 * starDensity); i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    r: Math.random() * 1.1 + 0.2,
+                    o: Math.random() * 0.5 + 0.5,
+                    tw: Math.random() * Math.PI * 2
+                });
+            }
+        }
+
+        function createShootingStar() {
+            if (shootingStars.length < 2 && Math.random() > 0.985) {
+                const side = Math.random() > 0.5 ? 0 : canvas.width;
+                shootingStars.push({
+                    x: side,
+                    y: Math.random() * canvas.height * 0.7 + 40,
+                    vx: side === 0 ? Math.random() * 5 + 6 : -Math.random() * 5 - 6,
+                    vy: Math.random() * 4 - 2,
+                    len: Math.random() * 120 + 120,
+                    alpha: 1.1
+                });
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Etoiles fixes
+            for (let s of stars) {
+                ctx.save();
+                ctx.globalAlpha = s.o * (0.5 + 0.5 * Math.sin(Date.now() / 1200 + s.tw));
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                ctx.fillStyle = "#e4e6ff";
+                ctx.shadowColor = "#8a5cff";
+                ctx.shadowBlur = 4;
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // Etoiles filantes
+            for (let i = shootingStars.length - 1; i >= 0; i--) {
+                let s = shootingStars[i];
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, s.alpha);
+                ctx.strokeStyle = "#8a5cffcc";
+                ctx.shadowColor = "#8a5cff";
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.moveTo(s.x, s.y);
+                ctx.lineTo(s.x - s.vx * s.len / 14, s.y - s.vy * s.len / 28);
+                ctx.lineWidth = 2.2;
+                ctx.stroke();
+                ctx.restore();
+
+                s.x += s.vx;
+                s.y += s.vy;
+                s.alpha -= 0.018;
+
+                if (s.x < -300 || s.x > canvas.width + 300 || s.alpha <= 0)
+                    shootingStars.splice(i, 1);
+            }
+
+            createShootingStar();
+        }
+
+        function resetStars() {
+            updateCanvasSize();
+            createStars();
+        }
+
+        window.addEventListener('resize', resetStars);
+        window.addEventListener('orientationchange', () => setTimeout(resetStars, 80));
+        resetStars();
+        draw();
+    </script>
+</body>
+
+</html>
