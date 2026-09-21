@@ -31,6 +31,10 @@
     </a>
 </p>
 
+<p align="center">
+    <img src="https://raw.githubusercontent.com/Nullmess/Waitgate/refs/heads/main/assets/ex.png" alt="Waitgate example" width="725">
+</p>
+
 ---
 
 ## ✨ Features
@@ -99,9 +103,7 @@ Main variables:
 TUNNEL_CHACHA_KEY   ChaCha20-Poly1305 key used for raw TCP tunnel payloads
 TUNNEL_TOKEN        Bearer token used to authenticate the tunnel client
 DASH_USER           Dashboard username
-DASH_PASS           Dashboard pasWaitgate is intended for administration, development and authorized remote access to systems you own or have permission to manage.
-
-Users are responsible for complying with applicable laws, network policies and service terms. The authors are not responsible for misuse or damage caused by the software.sword
+DASH_PASS           Dashboard password
 LOGIN_SECRET        Key used to protect dashboard login data
 TOTP_ENABLED        Enables or disables dashboard TOTP authentication
 TOTP_SECRET         TOTP secret when 2FA is enabled
